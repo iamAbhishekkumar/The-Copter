@@ -1,1 +1,1 @@
-# The Copter with NEAT
+# The Copter
