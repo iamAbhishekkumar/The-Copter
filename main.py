@@ -19,14 +19,31 @@ BACKGROUND_IMAGE = pygame.transform.scale(
     pygame.image.load('Assets/bg.png'), (WIDTH, HEIGHT))
 
 
-def render_text(text, x, y,font_size):
+def render_text(text, x, y, font_size):
     DISPLAY_TEXT = pygame.font.SysFont(
         'comicsans', font_size).render(str(text), True, colors.RED)
     padding = 15
     WIN.blit(DISPLAY_TEXT, (x - DISPLAY_TEXT.get_width() // 2, y))
+    pygame.display.update()
+
+
+def draw_static_screen(copter):
+    WIN.blit(BACKGROUND_IMAGE, (BG_movement, 0))
+    WIN.blit(BACKGROUND_IMAGE, (BG_movement + WIDTH, 0))
+    copter.draw_static_copter(WIN)
 
 
 BG_movement = 0
+COUNTER = 0
+
+
+def spawner():
+    global COUNTER
+    if COUNTER >= 100:
+        COUNTER = 0
+        pygame.event.post(pygame.event.Event(SPAWN_EVENT))
+    else:
+        COUNTER += 1
 
 
 def drawBG():
@@ -40,82 +57,83 @@ def drawBG():
 
 def draw_window(ghosts, copter, score):
     drawBG()
-    render_text(score, WIDTH - 40, 15,35)
+    SCORE = pygame.font.SysFont(
+        'comicsans', 35).render(str(score), True, colors.RED)
+    WIN.blit(SCORE, (WIDTH - 40 - SCORE.get_width() // 2, 15))
     copter.draw(WIN)
     for ghost in ghosts:
         ghost.draw(WIN)
     pygame.display.update()
 
 
-def game_over(ghosts, copter, score):
+def game_over(copter, score):
     center_x, center_y = WIDTH // 2, HEIGHT // 2
-    render_text("Game Over", center_x, center_y,60)
+
+    render_text("Game Over", center_x, center_y, 60)
+    draw_static_screen(copter)
+    pygame.time.delay(1000)
     pygame.display.update()
-    pygame.time.delay(2000)
-    
-    # draw_window(ghosts, copter, score)
-    # render_text("Your score : "+str(score), center_x, center_y)
-    # pygame.time.delay(1000)
-    # # draw_window(ghosts, copter, score)
-    # COUNTDOWN = 5
-    # while COUNTDOWN >= 0:
-    #     render_text(f"Restart in {COUNTDOWN}", center_x, center_x)
-    #     pygame.time.delay(1000)
-    #     # draw_window(ghosts, copter, score)
-    #     COUNTDOWN -= 1
+
+    render_text("Your score : "+str(score), center_x, center_y, 60)
+    draw_static_screen(copter)
+    pygame.time.delay(1000)
+    pygame.display.update()
+
+    COUNTDOWN = 5
+    while COUNTDOWN >= 0:
+        render_text(f"Restart in {COUNTDOWN}", center_x, center_x, 60)
+        draw_static_screen(copter)
+        pygame.time.delay(1000)
+        pygame.display.update()
+        COUNTDOWN -= 1
 
 
-def start():
-    pygame.time.delay(15000)
+def main():
     clock = pygame.time.Clock()
     run = True
     ghosts = []
     copter = Copter()
     score = 0
-    pygame.time.set_timer(SPAWN_EVENT, SPAWN_TIME)
+    start = False
+    draw_static_screen(copter)
+    render_text("Press Space to Start", WIDTH // 2, HEIGHT // 2, 60)
+    pygame.display.update()
     while run:
-        clock.tick(FPS)
+        clock.tick(55)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    start = True
 
             if event.type == SPAWN_EVENT:
                 ghosts.append(Ghost())
 
-        for ghost in ghosts:
-            ghost.move()
-            if ghost.rect.x < 0 - GHOST_WIDTH:
-                ghosts.remove(ghost)
-                score += 1
-            if copter.collision(ghost):
-                ghosts.remove(ghost)
-                game_over(ghosts, copter, score)
-                # start()
+        if start:
+            for ghost in ghosts:
+                ghost.move()
+                if ghost.rect.x < 0 - GHOST_WIDTH:
+                    ghosts.remove(ghost)
+                    score += 1
+                if copter.collision(ghost):
+                    ghosts.clear()
+                    game_over(copter, score)
+                    run = False
+
+            if copter.collison_with_boundary():
+                ghosts.clear()
+                game_over(copter, score)
                 run = False
 
-        if copter.collison_with_boundary():
-            game_over(ghosts, copter, score)
-            # start()
-            run = False
+            keys_pressed = pygame.key.get_pressed()
+            copter.update(keys_pressed)
 
-        keys_pressed = pygame.key.get_pressed()
-        copter.update(keys_pressed)
-
-        draw_window(ghosts, copter, score)
-
-
-def main():
-    WIN.blit(BACKGROUND_IMAGE, (0, 0))
-    pygame.display.update()
-
-    menu = pygame_menu.Menu(MENU_WIDTH, MENU_HEIGHT,
-                            'Welcome', theme=pygame_menu.themes.THEME_BLUE)
-    menu.add.text_input('Name :', default='Your Name')
-    menu.add.button('Play', start)
-    menu.add.button('Quit', pygame_menu.events.EXIT)
-    menu.mainloop(WIN)
+            draw_window(ghosts, copter, score)
+            spawner()
+    main()
 
 
 if __name__ == '__main__':
-    start()
+    main()

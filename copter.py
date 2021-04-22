@@ -58,3 +58,7 @@ class Copter():
         if self.rect.y < 0 or self.rect.y + self.hitbox_height > HEIGHT:
             return True
         return False
+
+    def draw_static_copter(self, WIN):
+        WIN.blit(COPTER_SPRITE[0],
+                 (self.rect.x - 20, self.rect.y))

@@ -22,6 +22,7 @@ class Ghost():
 
     def draw(self, WIN):
         WIN.blit(GHOST_SPRITE, (self.rect.x - 20, self.rect.y - 30))
+        
 
     def move(self):
         self.rect.x -= GHOST_SPEED
