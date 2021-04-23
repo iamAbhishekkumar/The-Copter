@@ -6,7 +6,6 @@ try:
     from ghost import Ghost
     from events import *
     from copter import Copter, COPTER_SPRITE
-    import pygame_menu
 except ImportError:
     print("Please ....fulfil requirements")
 
